@@ -1,0 +1,34 @@
+name: Build image (Docker)
+
+on:
+  push:
+    branches:
+      - demo
+    paths:
+      - "build/web/**"
+      - ".github/workflows/build-image.yaml"
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
+          docker build -t $IMAGE_NAME ./build/web
+          docker push $IMAGE_NAME
